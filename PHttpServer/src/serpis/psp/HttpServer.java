@@ -2,7 +2,6 @@ package serpis.psp;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,22 +9,22 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
-//VERSIÓN MONOHILO 2
 
 public class HttpServer 
 {
 	private static final String newLine = "\r\n";
 	
 	public static void main(String[] args) throws IOException, InterruptedException {
-		
 		//final String newLine = "\r\n";
 		final int port = 8080;
-		
-
 		ServerSocket serverSocket = new ServerSocket (port);
 		
+		String threadName = Thread.currentThread().getName();
+		
+		System.out.println("threadName" + threadName);
+		
 		while (true) {
-			//Que el servidor se quede escuchando
+			
 			Socket socket = serverSocket.accept();
 			
 			String fileName = getFileName(socket.getInputStream());
@@ -39,17 +38,39 @@ public class HttpServer
 	
 		private static String getFileName(InputStream inputStream){
 			Scanner scanner = new Scanner (inputStream);
+			//String fileName = "index.html";
+			String fileName = " ";
+			final String defaultFileName = "index.html";
 			
-			String fileName = "index.html";
 			
 			//Linea GET
 			while(true){
 				String line = scanner.nextLine();
-				System.out.println(line);
-				if (line.equals(""))
+				//System.out.println(line);
+				if (line.contains("GET")){ //GET /index.html HTTP 1/1
+					fileName=line.split(" ")[1].substring(1); //Se obtiene index.html
+					
+					//String
+					//int index = 5;
+					//while(line.charAt[index] != ' ')
+					//fileName += line.charAt(index++);
+					//Pattern pattern = Pattern.compile("GET /(?<filename>.*) HTTP/1.[01"];
+					// Matcher marcher = pattern.matcher(line);
+					// filename = matcher.group(1); //from 1.7 -> marcher. group("filename");
+					 
+					fileName = line.substring(5, line.indexOf(" ", 5));
+		
+				}
+				if (line.equals("")){
 					break;
+				}
+					
 			}
-			return fileName;		
+			//return fileName.equals("") ? fileName : defaultFileName;	
+			if (fileName.equals(""))
+				fileName = defaultFileName;
+			System.out.println("fileName=" + fileName);
+			return fileName;
 		}
 		
 		private static void writeHeader(OutputStream outputStream, String fileName) throws IOException{
@@ -69,8 +90,6 @@ public class HttpServer
 			File file = new File(fileName);
 			String responseFileName = file.exists() ? fileName : fileNameError404;
 			
-			//Hace falta una linea en blanco, ya que lo dice el protocolo HTTP
-
 			final int bufferSize = 2048;
 			byte[] buffer = new byte[bufferSize];
 			
