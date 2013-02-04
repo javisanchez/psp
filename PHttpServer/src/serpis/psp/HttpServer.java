@@ -11,13 +11,17 @@ public class HttpServer
 		//final String newLine = "\r\n";
 		final int port = 8080;
 		ServerSocket serverSocket = new ServerSocket (port);
-		
+						
 		while (true) {
 			
 			Socket socket = serverSocket.accept();
 			
-			SimpleServer.Process(socket);
+			//SimpleServer.Process(socket);
 			
+			Runnable runnable = new ThreadServer(socket);
+			Thread thread = new Thread(runnable);
+			thread.start();
+
 		}
 		//serverSocket.close();
 	}

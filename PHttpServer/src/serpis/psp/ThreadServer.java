@@ -5,26 +5,52 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 import java.util.Scanner;
+import java.net.Socket;
 
-public class SimpleServer {
-	private static final String newLine = "\r\n";
+//VERSIÓN MULTIHILO
+
+public class ThreadServer implements Runnable {
 	
-	public static void Process(Socket socket) throws IOException, InterruptedException{
-		String fileName = getFileName(socket.getInputStream());
-		writeHeader(socket.getOutputStream(), fileName);
-		writeFile(socket.getOutputStream(), fileName);
-		socket.close();
+	private static final String newLine = "\r\n";
+	private final String defaultFileName = "index.html";
+	private final String response200 = "HTTP/1.0 200 OK";
+	private final String response404 = "HTTP/1.0 404 Not Found";
+	private final String fileNameError404 = "fileError404.html";
+	
+	private Socket socket;
+	private InputStream inputStream;
+	private OutputStream outputStream;
+	private String fileName;
+	
+	public ThreadServer(Socket socket){
+		this.socket = socket;
 	}
 	
-	private static String getFileName(InputStream inputStream){
+	@Override
+	public void run() {
+		
+		System.out.println(Thread.currentThread().getName() + " inicio");
+		
+		try{
+			inputStream = socket.getInputStream();
+			outputStream = socket.getOutputStream();
+			getFileName();
+			writeHeader();
+			writeFile();
+			socket.close();
+		}catch(IOException ex){
+		}catch(InterruptedException ex){
+		}
+		
+		System.out.println(Thread.currentThread().getName() + " fin.");
+	}
+	
+	private String getFileName(){
 		Scanner scanner = new Scanner (inputStream);
 		//String fileName = "index.html";
 		String fileName = " ";
-		final String defaultFileName = "index.html";
-		
-		
+
 		//Linea GET
 		while(true){
 			String line = scanner.nextLine();
@@ -51,13 +77,12 @@ public class SimpleServer {
 		//return fileName.equals("") ? fileName : defaultFileName;	
 		if (fileName.equals(""))
 			fileName = defaultFileName;
-		System.out.println("fileName=" + fileName);
+		System.out.println(Thread.currentThread().getName() + "fileName=" + fileName);
 		return fileName;
 	}
 	
-	private static void writeHeader(OutputStream outputStream, String fileName) throws IOException{
-		final String response200 = "HTTP/1.0 200 OK";
-		final String response404 = "HTTP/1.0 404 Not Found";
+	private void writeHeader() throws IOException{
+
 		File file = new File (fileName);
 		String response = file.exists() ? response200 : response404;
 		String header = response + newLine + newLine;
@@ -66,8 +91,8 @@ public class SimpleServer {
 		outputStream.write(headerBuffer);
 	}
 	
-	private static void writeFile(OutputStream outputStream, String fileName) throws IOException, InterruptedException{
-		final String fileNameError404 = "fileError404.html";
+	private void writeFile() throws IOException, InterruptedException{
+
 		
 		File file = new File(fileName);
 		String responseFileName = file.exists() ? fileName : fileNameError404;
@@ -80,7 +105,7 @@ public class SimpleServer {
 		int count;
 		
 		while ((count = fileInputStream.read(buffer)) != -1){
-			System.out.print(Thread.currentThread().getName()+ ". ");
+			System.out.print(Thread.currentThread().getName()+ ".");
 			//Retardo
 			Thread.sleep (1000); 
 			outputStream.write(buffer, 0, count);
