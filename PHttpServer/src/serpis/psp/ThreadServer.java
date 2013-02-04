@@ -22,6 +22,7 @@ public class ThreadServer implements Runnable {
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private String fileName;
+	private Boolean fileExists;
 	
 	public ThreadServer(Socket socket){
 		this.socket = socket;
@@ -36,6 +37,7 @@ public class ThreadServer implements Runnable {
 			inputStream = socket.getInputStream();
 			outputStream = socket.getOutputStream();
 			getFileName();
+			getFileExists();
 			writeHeader();
 			writeFile();
 			socket.close();
@@ -46,26 +48,15 @@ public class ThreadServer implements Runnable {
 		System.out.println(Thread.currentThread().getName() + " fin.");
 	}
 	
-	private String getFileName(){
+	private void getFileName(){
 		Scanner scanner = new Scanner (inputStream);
-		//String fileName = "index.html";
 		String fileName = " ";
 
 		//Linea GET
 		while(true){
 			String line = scanner.nextLine();
-			//System.out.println(line);
 			if (line.contains("GET")){ //GET /index.html HTTP 1/1
-				fileName=line.split(" ")[1].substring(1); //Se obtiene index.html
-				
-				//String
-				//int index = 5;
-				//while(line.charAt[index] != ' ')
-				//fileName += line.charAt(index++);
-				//Pattern pattern = Pattern.compile("GET /(?<filename>.*) HTTP/1.[01"];
-				// Matcher marcher = pattern.matcher(line);
-				// filename = matcher.group(1); //from 1.7 -> marcher. group("filename");
-				 
+				fileName=line.split(" ")[1].substring(1); //Se obtiene index.html		 
 				fileName = line.substring(5, line.indexOf(" ", 5));
 	
 			}
@@ -78,13 +69,17 @@ public class ThreadServer implements Runnable {
 		if (fileName.equals(""))
 			fileName = defaultFileName;
 		System.out.println(Thread.currentThread().getName() + "fileName=" + fileName);
-		return fileName;
+	}
+	
+	private void getFileExists(){
+		File file = new File(fileName);
+		fileExists = file.exists();
+		
 	}
 	
 	private void writeHeader() throws IOException{
-
-		File file = new File (fileName);
-		String response = file.exists() ? response200 : response404;
+		String response = fileExists ? response200 : response404;
+		
 		String header = response + newLine + newLine;
 		byte[] headerBuffer = header.getBytes();
 		
