@@ -39,13 +39,15 @@ public class TCPClient {
 		Socket socket = new Socket (inetAddress, port);
 		
 		PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true); //autoflush=true
-		PrintWriter.println(line1);
-		PrintWriter.println(line2);
+		printWriter.println(line1);
+		printWriter.println(line2);
 		
 		Scanner scanner = new Scanner (socket.getInputStream());
 		
 		while(scanner.hasNextLine())
-			System.out.println(scanner.nextLine);
+			System.out.println(scanner.nextLine());
+		
+		socket.close();
 	}
 	
 	private static void connectAndRead(String[] args) throws IOException{
